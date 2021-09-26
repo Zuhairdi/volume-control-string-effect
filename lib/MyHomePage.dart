@@ -10,8 +10,15 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  double _sliderValue = 1;
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController =
+      AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+
+  late final CurvedAnimation _animation =
+      CurvedAnimation(parent: _animationController, curve: SpringCurve());
+
+  double _sliderValue = 0.95;
 
   double constant(double x) {
     double a = -20.0;
@@ -31,8 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-
-    print('slider: $_sliderValue, Container: ${(size.width * _sliderValue)}');
     return Scaffold(
       body: Stack(
         children: [
@@ -40,10 +45,17 @@ class _MyHomePageState extends State<MyHomePage> {
             top: size.height * 0.5,
             child: CustomPaint(
               foregroundPainter: MyPainter(myColor().transform(_sliderValue)!),
-              child: Container(
-                width: size.width * _sliderValue + constant(_sliderValue),
-                height: 300 * (1 - _sliderValue),
-              ),
+              child: _sliderValue < 0.9
+                  ? AnimatedContainer(
+                      duration: Duration(seconds: 1),
+                      curve: SpringCurve(),
+                      width: size.width * _sliderValue + constant(_sliderValue),
+                      height: 300 * (1 - _sliderValue),
+                    )
+                  : Container(
+                      width: size.width * _sliderValue + constant(_sliderValue),
+                      height: 300 * (1 - _sliderValue),
+                    ),
             ),
           ),
           Positioned(
@@ -61,6 +73,16 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
+  }
+}
+
+class SpringCurve extends Curve {
+  final double b;
+  final double a;
+  const SpringCurve({this.a = 0.2, this.b = 32.9});
+  @override
+  double transform(double t) {
+    return -(pow(e, -t / a) * cos(t * b)) + 1;
   }
 }
 
@@ -82,7 +104,7 @@ class MyPainter extends CustomPainter {
     final pointBx = size.width * 0.02;
     final pointBy = 0.0;
 
-    final pointCx = size.width * 0.93;
+    final pointCx = size.width * 0.95;
     final pointCy = 0.0;
 
     final pointDx = size.width * 0.95;
